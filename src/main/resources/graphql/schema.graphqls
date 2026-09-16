@@ -1,0 +1,187 @@
+type User
+{
+    id:ID!
+    name:String
+    email:String!
+    address:String
+    role: UserRole!
+    createdAt:String
+}
+
+type Order
+{
+    id:ID!
+    orderNumber:String!
+    status:OrderStatus!
+    totalAmount:Float!
+    orderDate:String!
+    user:User!
+    orderItems:[OrderItem!]!
+}
+
+type OrderItem
+{
+    id:ID!
+    quantity:Int!
+    price:Float!
+    product:Product!
+}
+
+type Product
+{
+    id:ID!
+    name:String
+    description:String
+    price:Float!
+    stockQuantity:Int!
+    category:String
+    imageUrl:String
+    createdAt:String
+
+
+}
+
+type ProductPage
+{
+    content:[Product!]!
+    totalElements:Int!
+    totalPages:Int!
+    currentPage:Int!
+    pageSize:Int!
+}
+
+type AuthPayload
+{
+    token:String!
+    userId:ID!
+    name:String
+    email:String!
+    role:UserRole!
+}
+
+type MessagePayload
+{
+    message:String!
+    success: Boolean!
+}
+
+enum OrderStatus
+{
+    PENDING
+    SHIPPED
+    PROCESSING
+    DELIVERED
+    CANCELLED
+}
+enum UserRole
+{
+    USER
+    ADMIN
+}
+
+input UserRegisterInput
+{
+    name:String!
+    email:String!
+    password:String!
+    address:String
+
+}
+
+input UserUpdateInput
+{
+    name:String!
+    email:String!
+    password:String!
+    address:String
+}
+
+input OrderInput
+{
+#    userId:ID!
+    orderItems:[OrderItemInput!]!
+}
+
+input OrderItemInput
+{
+    productId:ID!
+    quantity:Int!
+}
+
+input ProductInput
+{
+    name:String
+    description:String
+    price:Float
+    stockQuantity:Int
+    category:String
+    imageUrl:String
+}
+
+input ForgotPasswordInput
+{
+    email:String!
+}
+
+input ResetPasswordInput
+{
+    token:String!
+    newPassword:String!
+}
+
+
+
+type Query
+{
+    getAllUsers:[User]
+    getUser(id:ID):User!
+    getUserByEmail(email:String):User
+
+    # product
+    getAllProducts(
+        page: Int=0,
+        size: Int=10,
+        category: String,
+        minPrice: Float,
+        maxPrice: Float,
+        search: String
+    ): ProductPage!
+
+    getProduct(id:ID):Product!
+
+    # order
+    allOrders:[Order]
+    getOrder(id:ID!):Order!
+    myOrders:[Order!]!  # get from token
+}
+
+type Mutation
+{
+    addUser(userRegisterInput:UserRegisterInput):User!   # repalce with register
+    updateUser(id:ID, userUpdateInput:UserUpdateInput):User!
+    deleteUserById(id:ID!):Boolean!
+    makeAdmin(userId:ID!):MessagePayload
+
+    # product
+    addProduct(productInput:ProductInput):Product
+    updateProduct(id:ID, productInput:ProductInput):Product
+    updateStock(id:ID, stockQuantity:Int):Product
+    deleteProduct(id:ID):String
+
+    # order
+    addOrder(orderInput:OrderInput):Order
+    updateOrderStatus(id:ID!, status:OrderStatus):Order!
+    deleteOrder(id:ID!):String!
+    cancelOrder(id:ID!): Order!
+
+    # login
+    login(email:String!, password:String!): AuthPayload!
+    register(userRegisterInput:UserRegisterInput!): AuthPayload!
+
+    # forgot-password
+    forgotPassword(forgotPasswordInput:ForgotPasswordInput!):MessagePayload!
+    resetPassword(resetPasswordInput:ResetPasswordInput!):MessagePayload!
+
+
+
+}

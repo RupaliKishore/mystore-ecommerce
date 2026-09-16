@@ -1,0 +1,253 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MyStore - Shop</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+<!-- Header -->
+<header>
+  <h1>🛍️ MyStore</h1>
+  <div class="header-actions">
+    <input type="text" id="searchBox" placeholder="🔍 Search products..." autocomplete="off" autocorrect="off" spellcheck="false" />
+
+    <button id="loginBtn" class="icon-btn" onclick="openLogin()">👤 Login</button>
+
+    <div id="userMenu" class="user-menu hidden">
+      <span id="userName"></span>
+      <button class="logout-btn" onclick="logout()">Logout</button>
+    </div>
+
+    <button id="adminMenu" class="icon-btn hidden" onclick="openAdminPanel()" title="Admin Panel" style="background: #f39c12; color: #fff;"> 👑 Admin </button>
+
+    <button class="icon-btn" onclick="openMyOrders()" title="My Orders"> 📋 Orders</button>
+    <button class="icon-btn" onclick="openFavorites()"> ❤️ <span id="favCount" class="badge">0</span> </button>
+    <button class="icon-btn" onclick="openCart()"> 🛒 <span id="cartCount" class="badge">0</span> </button>
+  </div>
+</header>
+
+<!-- Add Product Section -->
+<section class="add-product-section">
+  <button id="addProductBtn" onclick="toggleForm()">+ Add New Product</button>
+  <form id="addForm" class="hidden" onsubmit="event.preventDefault(); addProduct();">
+    <input type="text" id="name" placeholder="Product Name" required />
+    <input type="text" id="imageUrl" placeholder="Image URL (https://...)" />
+    <input type="text" id="description" placeholder="Description" />
+    <input type="number" id="price" placeholder="Price (₹)" required step="0.01" />
+    <input type="number" id="stock" placeholder="Stock Quantity" required />
+    <input type="text" id="category" placeholder="Category" />
+    <button type="submit">Save Product</button>
+  </form>
+</section>
+
+<!-- Products Grid -->
+<main>
+  <div id="loading" class="status">Loading products...</div>
+  <div id="empty" class="status hidden">No products found.</div>
+  <div id="products" class="products"></div>
+</main>
+
+<!-- Toast -->
+<div id="toast" class="toast hidden"></div>
+
+<!-- Cart Modal -->
+<div id="cartModal" class="modal hidden">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>🛒 Your Cart</h2>
+      <button class="close-btn" onclick="closeCart()">✖</button>
+    </div>
+    <div id="cartItems" class="modal-body"></div>
+    <div class="modal-footer">
+      <div class="total">Total: ₹<span id="cartTotal">0</span></div>
+      <button class="checkout-btn" onclick="checkout()">Checkout</button>
+    </div>
+  </div>
+</div>
+
+<!-- Favorites Modal -->
+<div id="favModal" class="modal hidden">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>❤️ Your Favorites</h2>
+      <button class="close-btn" onclick="closeFavorites()">✖</button>
+    </div>
+    <div id="favItems" class="modal-body"></div>
+  </div>
+</div>
+
+
+
+<!-- Login/Register Modal -->
+<div id="loginModal" class="modal hidden">
+  <div class="modal-content" style="max-width: 400px;">
+    <div class="modal-header">
+      <h2 id="authTitle">Login</h2>
+      <button class="close-btn" onclick="closeLogin()">✖</button>
+    </div>
+    <div class="modal-body">
+      <div id="registerFields" class="hidden">
+        <input type="text" id="regName" placeholder="Full Name" class="auth-input" />
+        <input type="text" id="regAddress" placeholder="Address" class="auth-input" />
+      </div>
+      <input type="email" id="authEmail" placeholder="Email" class="auth-input" />
+      <input type="password" id="authPassword" placeholder="Password" class="auth-input" />
+      <div id="forgotPasswordDiv" style="text-align: right; margin-top: -5px; margin-bottom: 10px;">
+        <a href="#" onclick="event.preventDefault(); openForgotPassword();"
+           style="color: #3498db; font-size: 13px; text-decoration: none;">
+          Forgot Password?
+        </a>
+      </div>
+    </div>
+    <div class="modal-footer" style="flex-direction: column; gap: 10px;">
+      <button id="authSubmitBtn" class="checkout-btn" style="width: 100%;"
+              onclick="submitAuth()">Login</button>
+      <button onclick="switchAuthMode()"
+              style="background: none; border: none; color: #3498db; cursor: pointer; font-size: 13px;">
+        <span id="switchText">Don't have an account? Register</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+
+
+
+<!-- Orders Modal -->
+<div id="ordersModal" class="modal hidden">
+  <div class="modal-content" style="max-width: 700px;">
+    <div class="modal-header">
+      <h2>📋 My Orders</h2>
+      <button class="close-btn" onclick="closeMyOrders()">✖</button>
+    </div>
+    <div id="ordersList" class="modal-body"></div>
+  </div>
+</div>
+
+<!-- Admin Panel Modal -->
+<div id="adminModal" class="modal hidden">
+  <div class="modal-content" style="max-width: 900px;">
+    <div class="modal-header">
+      <h2>👑 Admin Panel</h2>
+      <button class="close-btn" onclick="closeAdminPanel()">✖</button>
+    </div>
+    <div class="modal-body">
+      <!-- Tabs -->
+      <div class="admin-tabs">
+        <button class="admin-tab active" onclick="switchAdminTab('products', this)">📦 Products</button>
+        <button class="admin-tab" onclick="switchAdminTab('orders', this)">📋 Orders</button>
+        <button class="admin-tab" onclick="switchAdminTab('users', this)">👥 Users</button>
+      </div>
+
+      <div id="adminContent" style="margin-top: 15px;">
+        <!-- Content dynamically load  -->
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Reset Password Modal -->
+<div id="resetModal" class="modal hidden">
+  <div class="modal-content" style="max-width: 400px;">
+    <div class="modal-header">
+      <h2>🔐 Reset Password</h2>
+      <button class="close-btn" onclick="hide('resetModal')">✖</button>
+    </div>
+    <div class="modal-body">
+      <p style="color: #666; margin-bottom: 15px;">
+        Enter your new password below.
+      </p>
+      <div style="position: relative;">
+        <input type="password" id="resetNewPassword" placeholder="New Password" class="auth-input" />
+        <button type="button" onclick="togglePassword('resetNewPassword', this)"
+                style="position: absolute; right: 10px; top: 12px; background: none; border: none; cursor: pointer; font-size: 16px;">
+          👁️
+        </button>
+      </div>
+      <div style="position: relative;">
+        <input type="password" id="resetConfirmPassword" placeholder="Confirm Password" class="auth-input" />
+        <button type="button" onclick="togglePassword('resetConfirmPassword', this)"
+                style="position: absolute; right: 10px; top: 12px; background: none; border: none; cursor: pointer; font-size: 16px;">
+          👁️
+        </button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="checkout-btn" style="width: 100%;"
+              onclick="submitReset()">Reset Password</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- Forgot Password Modal -->
+<div id="forgotModal" class="modal hidden">
+  <div class="modal-content" style="max-width: 400px;">
+    <div class="modal-header">
+      <h2>🔑 Forgot Password</h2>
+      <button class="close-btn" onclick="hide('forgotModal')">✖</button>
+    </div>
+    <div class="modal-body">
+      <p style="color: #666; margin-bottom: 15px;">
+        Enter your registered email. We'll send you a reset link.
+      </p>
+      <input type="email" id="forgotEmail"
+             placeholder="Email Address" class="auth-input" />
+    </div>
+    <div class="modal-footer">
+      <button class="checkout-btn" style="width: 100%;"
+              onclick="submitForgotPassword()">Send Reset Link</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================
+     Edit Product Modal
+     ============================================ -->
+<div id="editProductModal" class="modal hidden">
+  <div class="modal-content" style="max-width: 500px;">
+    <div class="modal-header">
+      <h2>✏️ Edit Product</h2>
+      <button class="close-btn" onclick="closeEditProductModal()">✖</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editProductId" />
+
+      <label class="edit-label">Product Name</label>
+      <input type="text" id="editName" class="auth-input" placeholder="Product Name" />
+
+      <label class="edit-label">Price (₹)</label>
+      <input type="number" id="editPrice" class="auth-input" placeholder="Price" step="0.01" min="0.01" />
+
+      <label class="edit-label">Stock Quantity</label>
+      <input type="number" id="editStock" class="auth-input" placeholder="Stock" min="0" />
+
+      <label class="edit-label">Image URL</label>
+      <input type="text" id="editImageUrl" class="auth-input" placeholder="https://..." />
+
+      <label class="edit-label">Category</label>
+      <input type="text" id="editCategory" class="auth-input" placeholder="Category" />
+
+      <label class="edit-label">Description</label>
+      <textarea id="editDescription" class="auth-input" placeholder="Description" rows="3"></textarea>
+    </div>
+    <div class="modal-footer" style="display: flex; gap: 10px; justify-content: flex-end;">
+      <button onclick="closeEditProductModal()"
+              style="padding: 10px 20px; background: #999; color: #fff; border: none; border-radius: 6px; cursor: pointer;">
+        Cancel
+      </button>
+      <button onclick="saveProductEdit()" class="checkout-btn" style="padding: 10px 25px;">
+        💾 Save Changes
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="js/app.js"></script>
+</body>
+</html>
