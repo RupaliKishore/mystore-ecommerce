@@ -1163,3 +1163,484 @@ main { padding: 0 30px 40px; }
   resize: vertical;
   min-height: 70px;
 }
+
+
+
+/* ============================================================
+   MOBILE RESPONSIVE — Media Queries
+   ============================================================ */
+
+/* ============================================================
+   TABLET — 768px to 1023px
+   ============================================================ */
+@media screen and (max-width: 1023px) {
+  /* Products Grid — 3 columns instead of 5 */
+  .products {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+  }
+
+  /* Header — reduce padding */
+  header {
+    padding: 12px 20px;
+  }
+
+  header h1 {
+    font-size: 20px;
+  }
+
+  #searchBox {
+    width: 200px;
+  }
+
+  /* Admin Table — allow horizontal scroll */
+  .admin-table {
+    font-size: 12px;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    padding: 8px 6px;
+  }
+}
+
+/* ============================================================
+   MOBILE — up to 767px
+   ============================================================ */
+@media screen and (max-width: 767px) {
+
+  /* ---------- BODY & CONTAINER ---------- */
+  body {
+    font-size: 14px;
+  }
+
+  main {
+    padding: 0 15px 30px;
+  }
+
+  /* ---------- HEADER ---------- */
+  header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 12px 15px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  header h1 {
+    font-size: 20px;
+    text-align: center;
+    margin-bottom: 5px;
+  }
+
+  .header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+  }
+
+  #searchBox {
+    width: 100%;
+    order: -1; /* Search first */
+    margin-bottom: 5px;
+  }
+
+  .icon-btn {
+    padding: 8px 12px;
+    font-size: 16px;
+  }
+
+  .user-menu {
+    padding: 4px 10px;
+    font-size: 12px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .user-menu span {
+    font-size: 12px;
+  }
+
+  .logout-btn {
+    padding: 4px 10px;
+    font-size: 12px;
+  }
+
+  /* ---------- ADD PRODUCT SECTION ---------- */
+  .add-product-section {
+    padding: 15px;
+    margin: 10px 15px;
+  }
+
+  #addForm {
+    grid-template-columns: 1fr;
+  }
+
+  /* ---------- PRODUCTS GRID ---------- */
+  .products {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+  }
+
+  .product img {
+    height: 140px;
+  }
+
+  .product-info {
+    padding: 10px 12px 12px;
+  }
+
+  .product h3 {
+    font-size: 14px;
+  }
+
+  .product .price {
+    font-size: 17px;
+  }
+
+  .card-buttons {
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .card-buttons button {
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  .fav-heart {
+    width: 30px;
+    height: 30px;
+    font-size: 14px;
+    top: 8px;
+    right: 8px;
+  }
+
+  /* ---------- MODAL ---------- */
+  .modal-content {
+    width: 95%;
+    max-width: none;
+    max-height: 90vh;
+    margin: 10px;
+    border-radius: 12px;
+  }
+
+  .modal-header {
+    padding: 14px 18px;
+  }
+
+  .modal-header h2 {
+    font-size: 17px;
+  }
+
+  .modal-body {
+    padding: 15px 18px;
+  }
+
+  .modal-footer {
+    padding: 14px 18px;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .modal-footer button {
+    width: 100%;
+  }
+
+  /* ---------- EDIT PRODUCT MODAL ---------- */
+  #editProductModal .modal-content {
+    max-width: 95%;
+  }
+
+  .edit-label {
+    font-size: 12px;
+  }
+
+  /* ---------- CART ITEMS ---------- */
+  .cart-item,
+  .fav-item {
+    gap: 10px;
+    padding: 10px 0;
+    flex-wrap: wrap;
+  }
+
+  .cart-item img,
+  .fav-item img {
+    width: 50px;
+    height: 50px;
+  }
+
+  .item-info h4 {
+    font-size: 13px;
+  }
+
+  .item-info .price {
+    font-size: 12px;
+  }
+
+  .qty-controls {
+    gap: 5px;
+  }
+
+  .qty-controls button {
+    width: 24px;
+    height: 24px;
+    font-size: 14px;
+  }
+
+  .qty-controls span {
+    min-width: 20px;
+    font-size: 13px;
+  }
+
+  /* ---------- ORDER CARDS ---------- */
+  .order-card {
+    padding: 15px;
+  }
+
+  .order-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .order-header > div:last-child {
+    text-align: left !important;
+    width: 100%;
+  }
+
+  .order-number {
+    font-size: 14px;
+  }
+
+  .order-total {
+    font-size: 17px;
+  }
+
+  /* ---------- TIMELINE ---------- */
+  .timeline {
+    padding: 0;
+    margin: 15px 0;
+  }
+
+  .timeline-circle {
+    width: 26px;
+    height: 26px;
+    font-size: 11px;
+  }
+
+  .timeline-label {
+    font-size: 9px;
+  }
+
+  .timeline-line {
+    top: 13px;
+  }
+
+  /* ---------- ORDER ITEMS ---------- */
+  .order-item-row {
+    gap: 8px;
+    padding: 6px 0;
+  }
+
+  .order-item-row img {
+    width: 40px;
+    height: 40px;
+  }
+
+  .order-item-info h5 {
+    font-size: 12px;
+  }
+
+  .order-item-info .item-meta {
+    font-size: 11px;
+  }
+
+  .order-item-price {
+    font-size: 12px;
+  }
+
+  /* ---------- ADMIN PANEL ---------- */
+  #adminModal .modal-content {
+    max-width: 98%;
+  }
+
+  /* Admin Tabs — smaller */
+  .admin-tabs {
+    overflow-x: auto;
+    white-space: nowrap;
+    gap: 3px;
+    padding-bottom: 3px;
+  }
+
+  .admin-tab {
+    padding: 8px 12px;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+
+  /* Admin Stats — 2 columns */
+  .admin-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .stat-card {
+    padding: 12px 8px;
+  }
+
+  .stat-card .stat-value {
+    font-size: 20px;
+  }
+
+  .stat-card .stat-label {
+    font-size: 10px;
+  }
+
+  /* ---------- ADMIN TABLE ---------- */
+  .admin-table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-table {
+    font-size: 11px;
+    min-width: 600px;
+  }
+
+  .admin-table th,
+  .admin-table td {
+    padding: 6px 5px;
+    white-space: nowrap;
+  }
+
+  .admin-table img {
+    width: 35px;
+    height: 35px;
+  }
+
+  .admin-actions {
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .btn-sm {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+
+  .status-select {
+    padding: 4px 6px;
+    font-size: 11px;
+  }
+
+  /* ---------- FORMS ---------- */
+  .auth-input {
+    padding: 10px;
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+
+  /* ---------- TOAST ---------- */
+  .toast {
+    bottom: 20px;
+    right: 15px;
+    left: 15px;
+    font-size: 13px;
+    padding: 12px 16px;
+    max-width: none;
+  }
+
+  /* ---------- BUTTONS ---------- */
+  .checkout-btn {
+    padding: 10px 20px;
+    font-size: 14px;
+    width: 100%;
+  }
+
+  /* ---------- EMPTY STATE ---------- */
+  .empty-msg {
+    padding: 20px;
+    font-size: 14px;
+  }
+}
+
+/* ============================================================
+   SMALL MOBILE — up to 480px (iPhone SE, etc.)
+   ============================================================ */
+@media screen and (max-width: 480px) {
+
+  /* Products — single column for very small screens */
+  .products {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .product img {
+    height: 200px;
+  }
+
+  header h1 {
+    font-size: 18px;
+  }
+
+  .icon-btn {
+    padding: 6px 10px;
+    font-size: 14px;
+  }
+
+  #searchBox {
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+
+  .modal-header h2 {
+    font-size: 16px;
+  }
+
+  .order-total {
+    font-size: 16px;
+  }
+
+  .timeline-label {
+    font-size: 8px;
+  }
+
+  .timeline-circle {
+    width: 22px;
+    height: 22px;
+    font-size: 10px;
+  }
+}
+
+/* ============================================================
+   TOUCH DEVICES — better tap targets
+   ============================================================ */
+@media (hover: none) and (pointer: coarse) {
+  /* Increase tap target sizes */
+  .icon-btn,
+  .card-buttons button,
+  .qty-controls button,
+  .btn-sm {
+    min-height: 36px;
+    min-width: 36px;
+  }
+
+  /* Remove hover effects on touch */
+  .product:hover {
+    transform: none;
+  }
+
+  .icon-btn:hover {
+    background: #fff;
+  }
+
+  /* Better scrolling */
+  .modal-body {
+    -webkit-overflow-scrolling: touch;
+  }
+}
