@@ -59,3 +59,9 @@ Frontend/.idea/
 Frontend/npm-debug.log*
 Frontend/yarn-debug.log*
 Frontend/yarn-error.log*
+
+
+### Environment Files ###
+.env
+*.env
+.env.local
