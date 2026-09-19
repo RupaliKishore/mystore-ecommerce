@@ -1,11 +1,13 @@
 // ============================================================
-// MyStore Frontend - GraphQL Client (SECURED)
+// MyStore Frontend - Complete App.js
 // ============================================================
 
-const GRAPHQL_URL = 'http://localhost:8085/graphql';
+const GRAPHQL_URL = window.location.hostname === 'localhost'
+  ? 'http://localhost:8085/graphql'
+  : 'https://YOUR-BACKEND-URL.railway.app/graphql';  // ← Badala jar deploy kela asel tar
 
 // ============================================================
-// STATE — token in sessionStorage (safer than localStorage)
+// STATE
 // ============================================================
 let authToken = sessionStorage.getItem('authToken');
 let currentUser = JSON.parse(sessionStorage.getItem('currentUser') || 'null');
@@ -18,8 +20,13 @@ let forgotToken = null;
 let toastTimer = null;
 let loadReqId = 0;
 
-// In-memory product cache (avoid DOM scraping)
 const productsById = new Map();
+
+// Reviews state
+let currentReviewProductId = null;
+let currentProductDetailId = null;
+let selectedRating = 0;
+let detailQuantity = 1;
 
 // ============================================================
 // GRAPHQL HELPER
@@ -123,6 +130,13 @@ function buildImage(src, alt, className) {
   return img;
 }
 
+function getStarsDisplay(rating) {
+  const fullStars = Math.floor(rating);
+  const hasHalf = rating - fullStars >= 0.5;
+  const emptyStars = 5 - fullStars - (hasHalf ? 1 : 0);
+  return '★'.repeat(fullStars) + (hasHalf ? '⯨' : '') + '☆'.repeat(emptyStars);
+}
+
 // ============================================================
 // AUTH UI
 // ============================================================
@@ -183,7 +197,17 @@ async function loadProducts(search = '') {
     const data = await gql(`
       query($search: String) {
         getAllProducts(page: 0, size: 50, search: $search) {
-          content { id name description price stockQuantity category imageUrl }
+          content {
+            id
+            name
+            description
+            price
+            stockQuantity
+            category
+            imageUrl
+            averageRating
+            totalReviews
+          }
         }
       }
     `, { search: search || null });
@@ -219,29 +243,55 @@ function renderProducts(products) {
     const isFav = favorites.some(f => String(f.id) === idStr);
     const outOfStock = p.stockQuantity === 0;
 
+    // Rating data
+    const avgRating = p.averageRating || 0;
+    const totalReviews = p.totalReviews || 0;
+    const starsDisplay = getStarsDisplay(avgRating);
+
+    const ratingHtml = totalReviews > 0
+      ? `<div class="product-rating">
+           <span class="stars-display">${starsDisplay}</span>
+           <span class="rating-value">${avgRating.toFixed(1)}</span>
+           <span class="review-count">(${totalReviews})</span>
+         </div>`
+      : `<div class="product-rating no-reviews">No reviews yet</div>`;
+
     const card = document.createElement('div');
     card.className = 'product';
     card.dataset.id = idStr;
 
+    // Favorite heart
     const favBtn = document.createElement('button');
     favBtn.className = 'fav-heart' + (isFav ? ' active' : '');
     favBtn.textContent = isFav ? '❤️' : '🤍';
     favBtn.setAttribute('aria-label', 'Toggle favorite');
     favBtn.dataset.id = idStr;
-    favBtn.addEventListener('click', () => toggleFavorite(idStr));
+    favBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      toggleFavorite(idStr);
+    });
     card.appendChild(favBtn);
 
-    card.appendChild(buildImage(p.imageUrl, p.name));
+    // Image — click to open detail
+    const imgEl = buildImage(p.imageUrl, p.name);
+    imgEl.style.cursor = 'pointer';
+    imgEl.addEventListener('click', () => openProductDetail(idStr));
+    card.appendChild(imgEl);
 
+    // Info — click to open detail
     const info = document.createElement('div');
     info.className = 'product-info';
+    info.style.cursor = 'pointer';
     info.innerHTML = `
       <h3>${escapeHtml(p.name)}</h3>
       <div class="category">${escapeHtml(p.category || 'General')}</div>
+      ${ratingHtml}
       <div class="price">₹${escapeHtml(p.price)}</div>
       <div class="stock ${outOfStock ? 'low' : ''}">Stock: ${escapeHtml(p.stockQuantity)}</div>
     `;
+    info.addEventListener('click', () => openProductDetail(idStr));
 
+    // Buttons
     const btnWrap = document.createElement('div');
     btnWrap.className = 'card-buttons';
 
@@ -249,20 +299,503 @@ function renderProducts(products) {
     orderBtn.className = 'btn-order';
     orderBtn.textContent = outOfStock ? 'Out' : 'Order Now';
     orderBtn.disabled = outOfStock;
-    orderBtn.addEventListener('click', () => orderProduct(idStr));
+    orderBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      orderProduct(idStr);
+    });
     btnWrap.appendChild(orderBtn);
 
     const cartBtn = document.createElement('button');
     cartBtn.className = 'btn-cart';
     cartBtn.textContent = '🛒 Cart';
     cartBtn.disabled = outOfStock;
-    cartBtn.addEventListener('click', () => addToCart(idStr));
+    cartBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      addToCart(idStr);
+    });
     btnWrap.appendChild(cartBtn);
+
+    const reviewsBtn = document.createElement('button');
+    reviewsBtn.className = 'btn-reviews';
+    reviewsBtn.textContent = '⭐ Reviews';
+    reviewsBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openReviewsModal(p.id, p.name);
+    });
+    btnWrap.appendChild(reviewsBtn);
 
     info.appendChild(btnWrap);
     card.appendChild(info);
     container.appendChild(card);
   });
+}
+
+// ============================================================
+// PRODUCT DETAIL MODAL (Flipkart-style)
+// ============================================================
+async function openProductDetail(productId) {
+  const idStr = String(productId);
+  let product = productsById.get(idStr);
+
+  if (!product) {
+    try {
+      const data = await gql(`
+        query($id: ID!) {
+          getProduct(id: $id) {
+            id name description price stockQuantity category imageUrl
+            averageRating totalReviews
+          }
+        }
+      `, { id: productId });
+      product = data.getProduct;
+      productsById.set(idStr, product);
+    } catch (err) {
+      showToast('Failed to load product: ' + err.message, true);
+      return;
+    }
+  }
+
+  currentProductDetailId = idStr;
+  detailQuantity = 1;
+
+  document.getElementById('productDetailTitle').textContent = product.name || 'Product Details';
+
+  const body = document.getElementById('productDetailBody');
+  const isFav = favorites.some(f => String(f.id) === idStr);
+  const outOfStock = product.stockQuantity === 0;
+  const avgRating = product.averageRating || 0;
+  const totalReviews = product.totalReviews || 0;
+  const starsDisplay = getStarsDisplay(avgRating);
+
+  const ratingRowHtml = totalReviews > 0
+    ? `<div class="rating-row">
+         <span class="big-rating">${avgRating.toFixed(1)}</span>
+         <span class="rating-stars">${starsDisplay}</span>
+         <a class="reviews-count-link" onclick="viewReviewsFromDetail(${product.id}, '${escapeHtml(product.name).replace(/'/g, "\\'")}')">
+           ${totalReviews} review${totalReviews > 1 ? 's' : ''} →
+         </a>
+       </div>`
+    : `<div class="rating-row">
+         <span style="color:#888;font-style:italic;">No reviews yet</span>
+         <a class="reviews-count-link" onclick="viewReviewsFromDetail(${product.id}, '${escapeHtml(product.name).replace(/'/g, "\\'")}')">
+           Be the first to review →
+         </a>
+       </div>`;
+
+  body.innerHTML = `
+    <div class="product-detail-container">
+      <div class="product-detail-image">
+        <img id="detailImage" src="${safeUrl(product.imageUrl) || getPlaceholderImage()}"
+             alt="${escapeHtml(product.name)}"
+             onerror="this.src='${getPlaceholderImage()}'" />
+      </div>
+
+      <div class="product-detail-info">
+        <h2>${escapeHtml(product.name)}</h2>
+        <span class="category-badge">${escapeHtml(product.category || 'General')}</span>
+
+        ${ratingRowHtml}
+
+        <div class="product-detail-price">₹${escapeHtml(product.price)}</div>
+
+        <div class="product-detail-stock ${outOfStock ? 'out-of-stock' : 'in-stock'}">
+          ${outOfStock ? '❌ Out of Stock' : `✅ In Stock (${product.stockQuantity} available)`}
+        </div>
+
+        ${product.description ? `
+          <div class="product-detail-description">
+            <h4>📝 Description</h4>
+            <p>${escapeHtml(product.description)}</p>
+          </div>
+        ` : ''}
+
+        ${!outOfStock ? `
+          <div class="quantity-selector">
+            <label>Quantity:</label>
+            <button class="qty-btn" onclick="decreaseDetailQty()">−</button>
+            <span class="qty-value" id="detailQtyValue">1</span>
+            <button class="qty-btn" onclick="increaseDetailQty()">+</button>
+          </div>
+        ` : ''}
+
+        <div class="product-detail-actions">
+          <button class="btn-detail-cart" id="detailCartBtn" onclick="addToCartFromDetail()" ${outOfStock ? 'disabled' : ''}>
+            🛒 Add to Cart
+          </button>
+          <button class="btn-detail-order" onclick="orderFromDetail()" ${outOfStock ? 'disabled' : ''}>
+            ⚡ Buy Now
+          </button>
+          <button class="btn-detail-fav ${isFav ? 'active' : ''}" onclick="toggleFavFromDetail()" title="Add to favorites">
+            ${isFav ? '❤️' : '🤍'}
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+
+  show('productDetailModal');
+}
+
+function closeProductDetail() {
+  hide('productDetailModal');
+  currentProductDetailId = null;
+  detailQuantity = 1;
+}
+
+function increaseDetailQty() {
+  if (!currentProductDetailId) return;
+  const product = productsById.get(currentProductDetailId);
+  if (!product) return;
+
+  if (detailQuantity < product.stockQuantity) {
+    detailQuantity++;
+    document.getElementById('detailQtyValue').textContent = detailQuantity;
+  } else {
+    showToast('Maximum stock reached', true);
+  }
+}
+
+function decreaseDetailQty() {
+  if (detailQuantity > 1) {
+    detailQuantity--;
+    document.getElementById('detailQtyValue').textContent = detailQuantity;
+  }
+}
+
+function addToCartFromDetail() {
+  if (!currentProductDetailId) return;
+  const product = productsById.get(currentProductDetailId);
+  if (!product) return;
+
+  const existing = cart.find(i => String(i.id) === currentProductDetailId);
+  if (existing) {
+    existing.quantity += detailQuantity;
+  } else {
+    cart.push({
+      id: currentProductDetailId,
+      name: product.name,
+      price: product.price,
+      imageUrl: product.imageUrl,
+      quantity: detailQuantity
+    });
+  }
+  saveCart();
+  showToast(`🛒 Added ${detailQuantity} item(s) to cart!`);
+  closeProductDetail();
+}
+
+async function orderFromDetail() {
+  if (!currentProductDetailId) return;
+  if (!currentUser) {
+    showToast('Please login to order!', true);
+    closeProductDetail();
+    openLogin();
+    return;
+  }
+
+  const product = productsById.get(currentProductDetailId);
+  if (!product) return;
+
+  try {
+    const data = await gql(`
+      mutation($input: OrderInput) {
+        addOrder(orderInput: $input) { id orderNumber status totalAmount }
+      }
+    `, {
+      input: {
+        orderItems: [{ productId: currentProductDetailId, quantity: detailQuantity }]
+      }
+    });
+
+    showToast('🎉 Order placed! ' + data.addOrder.orderNumber);
+    closeProductDetail();
+    loadProducts(document.getElementById('searchBox').value.trim());
+  } catch (err) {
+    showToast('❌ ' + err.message, true);
+  }
+}
+
+function toggleFavFromDetail() {
+  if (!currentProductDetailId) return;
+  toggleFavorite(currentProductDetailId);
+
+  // Update the heart in the detail modal
+  const product = productsById.get(currentProductDetailId);
+  if (product) {
+    const isFav = favorites.some(f => String(f.id) === currentProductDetailId);
+    const favBtn = document.querySelector('.btn-detail-fav');
+    if (favBtn) {
+      favBtn.classList.toggle('active', isFav);
+      favBtn.textContent = isFav ? '❤️' : '🤍';
+    }
+  }
+}
+
+function viewReviewsFromDetail(productId, productName) {
+  closeProductDetail();
+  openReviewsModal(productId, productName);
+}
+
+// ============================================================
+// REVIEWS & RATINGS
+// ============================================================
+async function openReviewsModal(productId, productName) {
+  currentReviewProductId = productId;
+  selectedRating = 0;
+
+  document.getElementById('reviewsModalTitle').textContent = `⭐ Reviews: ${productName}`;
+  document.getElementById('reviewsModal').classList.remove('hidden');
+
+  resetReviewForm();
+
+  await loadProductReviews(productId);
+
+  if (currentUser) {
+    document.getElementById('addReviewSection').classList.remove('hidden');
+    document.getElementById('loginRequiredMsg').classList.add('hidden');
+  } else {
+    document.getElementById('addReviewSection').classList.add('hidden');
+    document.getElementById('loginRequiredMsg').classList.remove('hidden');
+  }
+}
+
+function closeReviewsModal() {
+  document.getElementById('reviewsModal').classList.add('hidden');
+  currentReviewProductId = null;
+  selectedRating = 0;
+}
+
+async function loadProductReviews(productId) {
+  const listContainer = document.getElementById('reviewsList');
+  const summaryContainer = document.getElementById('reviewProductSummary');
+
+  listContainer.innerHTML = '<div class="empty-msg">Loading reviews...</div>';
+
+  try {
+    const data = await gql(`
+      query($productId: ID!) {
+        getProductReviews(productId: $productId) {
+          id
+          rating
+          comment
+          createdAt
+          user { id name email }
+        }
+        getProductAverageRating(productId: $productId)
+        getProductReviewCount(productId: $productId)
+      }
+    `, { productId: productId });
+
+    const reviews = data.getProductReviews || [];
+    const avgRating = data.getProductAverageRating || 0;
+    const totalReviews = data.getProductReviewCount || 0;
+
+    renderReviewSummary(avgRating, totalReviews);
+    renderReviewsList(reviews);
+
+  } catch (err) {
+    listContainer.innerHTML = `<div class="empty-msg">❌ ${escapeHtml(err.message)}</div>`;
+    summaryContainer.innerHTML = '';
+  }
+}
+
+function renderReviewSummary(avgRating, totalReviews) {
+  const container = document.getElementById('reviewProductSummary');
+
+  if (totalReviews === 0) {
+    container.innerHTML = `
+      <h3>Be the first to review!</h3>
+      <div class="total-reviews">No reviews yet</div>
+    `;
+    return;
+  }
+
+  const starsDisplay = getStarsDisplay(avgRating);
+
+  container.innerHTML = `
+    <div class="big-rating">${avgRating.toFixed(1)}</div>
+    <div class="big-stars">${starsDisplay}</div>
+    <div class="total-reviews">Based on ${totalReviews} review${totalReviews > 1 ? 's' : ''}</div>
+  `;
+}
+
+function renderReviewsList(reviews) {
+  const container = document.getElementById('reviewsList');
+
+  if (!reviews || reviews.length === 0) {
+    container.innerHTML = '<div class="no-reviews-msg">💭 No reviews yet. Be the first!</div>';
+    return;
+  }
+
+  container.innerHTML = '';
+
+  reviews.forEach(review => {
+    const item = document.createElement('div');
+    item.className = 'review-item';
+
+    const stars = getStarsDisplay(review.rating);
+    const date = new Date(review.createdAt).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric'
+    });
+
+    const initials = review.user?.name
+      ? review.user.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+      : '?';
+
+    const canDelete = currentUser && (
+      currentUser.id === review.user?.id ||
+      currentUser.role === 'ADMIN'
+    );
+
+    const deleteBtn = canDelete
+      ? `<button class="review-delete-btn" onclick="deleteReview(${review.id})">🗑️ Delete</button>`
+      : '';
+
+    item.innerHTML = `
+      <div class="review-header">
+        <div class="review-user-info">
+          <div class="review-avatar">${escapeHtml(initials)}</div>
+          <div class="review-user-details">
+            <h5>${escapeHtml(review.user?.name || 'Anonymous')}</h5>
+            <div class="review-date">${escapeHtml(date)}</div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <div class="review-rating">${stars}</div>
+          ${deleteBtn}
+        </div>
+      </div>
+      ${review.comment ? `<div class="review-comment">${escapeHtml(review.comment)}</div>` : ''}
+    `;
+
+    container.appendChild(item);
+  });
+}
+
+function initStarRating() {
+  const stars = document.querySelectorAll('#starInput .star');
+
+  stars.forEach(star => {
+    star.addEventListener('click', () => {
+      selectedRating = parseInt(star.dataset.rating);
+      updateStarsUI(selectedRating);
+    });
+
+    star.addEventListener('mouseenter', () => {
+      const rating = parseInt(star.dataset.rating);
+      updateStarsUI(rating);
+    });
+  });
+
+  const starInput = document.getElementById('starInput');
+  if (starInput) {
+    starInput.addEventListener('mouseleave', () => {
+      updateStarsUI(selectedRating);
+    });
+  }
+}
+
+function updateStarsUI(rating) {
+  const stars = document.querySelectorAll('#starInput .star');
+  stars.forEach((star, index) => {
+    if (index < rating) {
+      star.classList.add('selected');
+      star.textContent = '★';
+    } else {
+      star.classList.remove('selected');
+      star.textContent = '☆';
+    }
+  });
+}
+
+function resetReviewForm() {
+  selectedRating = 0;
+  updateStarsUI(0);
+  const commentEl = document.getElementById('reviewComment');
+  if (commentEl) commentEl.value = '';
+}
+
+function cancelReview() {
+  resetReviewForm();
+}
+
+async function submitReview() {
+  if (!currentReviewProductId) return;
+
+  if (selectedRating === 0) {
+    showToast('Please select a rating', true);
+    return;
+  }
+
+  const comment = document.getElementById('reviewComment').value.trim();
+
+  if (comment.length > 1000) {
+    showToast('Comment too long (max 1000 chars)', true);
+    return;
+  }
+
+  const submitBtn = document.querySelector('.btn-submit-review');
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    submitBtn.textContent = '⏳ Submitting...';
+  }
+
+  try {
+    await gql(`
+      mutation($input: ReviewInput!) {
+        addReview(reviewInput: $input) {
+          id
+          rating
+          comment
+          createdAt
+        }
+      }
+    `, {
+      input: {
+        productId: currentReviewProductId,
+        rating: selectedRating,
+        comment: comment || null
+      }
+    });
+
+    showToast('✅ Review added successfully!');
+    resetReviewForm();
+
+    await loadProductReviews(currentReviewProductId);
+    loadProducts(document.getElementById('searchBox').value.trim());
+
+  } catch (err) {
+    showToast('❌ ' + err.message, true);
+  } finally {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.textContent = 'Submit Review';
+    }
+  }
+}
+
+async function deleteReview(reviewId) {
+  if (!confirm('Delete this review permanently?')) return;
+
+  try {
+    await gql(`
+      mutation($id: ID!) {
+        deleteReview(id: $id)
+      }
+    `, { id: reviewId });
+
+    showToast('🗑️ Review deleted!');
+
+    if (currentReviewProductId) {
+      await loadProductReviews(currentReviewProductId);
+      loadProducts(document.getElementById('searchBox').value.trim());
+    }
+
+  } catch (err) {
+    showToast('❌ ' + err.message, true);
+  }
 }
 
 // ============================================================
@@ -308,7 +841,7 @@ async function addProduct() {
 }
 
 // ============================================================
-// ORDER PRODUCT
+// ORDER PRODUCT (Direct)
 // ============================================================
 async function orderProduct(productId) {
   if (!currentUser) { showToast('Please login to order!', true); openLogin(); return; }
@@ -900,9 +1433,6 @@ async function showAddProductForm() {
   }
 }
 
-// ============================================================
-// EDIT PRODUCT — Modal-based
-// ============================================================
 async function editProduct(productId) {
   const idStr = String(productId);
   let product = productsById.get(idStr);
@@ -942,9 +1472,6 @@ async function editProduct(productId) {
   show('editProductModal');
 }
 
-// ============================================================
-// CLOSE EDIT MODAL
-// ============================================================
 function closeEditProductModal() {
   hide('editProductModal');
   ['editProductId', 'editName', 'editPrice', 'editStock',
@@ -952,26 +1479,21 @@ function closeEditProductModal() {
     const el = document.getElementById(id);
     if (el) el.value = '';
   });
-  // ✅ Save button  enable  (important!)
-  const saveBtn = document.querySelector('#editProductModal .checkout-btn');
-  if (saveBtn) {
-    saveBtn.disabled = false;
-    saveBtn.textContent = '💾 Save Changes';
+  const modal = document.getElementById('editProductModal');
+  if (modal) {
+    delete modal.dataset.original;
+    const saveBtn = modal.querySelector('.checkout-btn');
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.textContent = '💾 Save Changes';
+    }
   }
-
-  delete document.getElementById('editProductModal').dataset.original;
 }
 
-// ============================================================
-// SAVE PRODUCT EDIT — Fixed version
-// ============================================================
-// ============================================================
-// SAVE PRODUCT EDIT — Always send all fields (simple & reliable)
-// ============================================================
 async function saveProductEdit() {
+  const modal = document.getElementById('editProductModal');
   const productId = document.getElementById('editProductId').value;
 
-  //  madhli  values
   const nameRaw = document.getElementById('editName').value.trim();
   const priceRaw = document.getElementById('editPrice').value;
   const stockRaw = document.getElementById('editStock').value;
@@ -979,25 +1501,13 @@ async function saveProductEdit() {
   const categoryRaw = document.getElementById('editCategory').value.trim();
   const descriptionRaw = document.getElementById('editDescription').value.trim();
 
-  // Type convert
   const price = parseFloat(priceRaw);
   const stockQuantity = parseInt(stockRaw, 10);
 
-  // Validation (fields)
-  if (!nameRaw) {
-    showToast('Product name is required', true);
-    return;
-  }
-  if (isNaN(price) || price <= 0) {
-    showToast('Price must be greater than 0', true);
-    return;
-  }
-  if (isNaN(stockQuantity) || stockQuantity < 0) {
-    showToast('Stock cannot be negative', true);
-    return;
-  }
+  if (!nameRaw) { showToast('Product name is required', true); return; }
+  if (isNaN(price) || price <= 0) { showToast('Price must be greater than 0', true); return; }
+  if (isNaN(stockQuantity) || stockQuantity < 0) { showToast('Stock cannot be negative', true); return; }
 
-  //  all fields send always  — empty optional → null
   const input = {
     name: nameRaw,
     description: descriptionRaw || null,
@@ -1007,10 +1517,7 @@ async function saveProductEdit() {
     imageUrl: imageUrlRaw || null
   };
 
-  console.log('📤 Sending to backend:', input);
-
-  // Save button disable kara
-  const saveBtn = document.querySelector('#editProductModal .checkout-btn');
+  const saveBtn = modal.querySelector('.checkout-btn');
   if (saveBtn) {
     saveBtn.disabled = true;
     saveBtn.textContent = '⏳ Saving...';
@@ -1026,17 +1533,10 @@ async function saveProductEdit() {
     `, { id: productId, input });
 
     showToast('✅ Product updated!');
-    // ✅ Success madhe pण button reset kara
-    if (saveBtn) {
-      saveBtn.disabled = false;
-      saveBtn.textContent = '💾 Save Changes';
-    }
-
     closeEditProductModal();
     loadAdminProducts();
     loadProducts();
   } catch (err) {
-    console.error('❌ Update failed:', err);
     showToast('❌ ' + err.message, true);
     if (saveBtn) {
       saveBtn.disabled = false;
@@ -1316,7 +1816,8 @@ async function submitForgotPassword() {
 document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     ['cartModal', 'favModal', 'loginModal', 'ordersModal', 'adminModal',
-      'resetModal', 'forgotModal', 'editProductModal'].forEach(hide);
+      'resetModal', 'forgotModal', 'editProductModal', 'reviewsModal',
+      'productDetailModal'].forEach(hide);
   }
 });
 
@@ -1331,6 +1832,8 @@ window.addEventListener('DOMContentLoaded', () => {
   updateFavBadge();
   updateAuthUI();
   loadProducts();
+
+  setTimeout(initStarRating, 200);
 });
 
 // ============================================================
@@ -1393,3 +1896,20 @@ window.submitForgotPassword = submitForgotPassword;
 window.submitReset = submitReset;
 window.togglePassword = togglePassword;
 window.checkResetTokenInUrl = checkResetTokenInUrl;
+
+// Reviews
+window.openReviewsModal = openReviewsModal;
+window.closeReviewsModal = closeReviewsModal;
+window.submitReview = submitReview;
+window.cancelReview = cancelReview;
+window.deleteReview = deleteReview;
+
+// Product Detail
+window.openProductDetail = openProductDetail;
+window.closeProductDetail = closeProductDetail;
+window.addToCartFromDetail = addToCartFromDetail;
+window.orderFromDetail = orderFromDetail;
+window.toggleFavFromDetail = toggleFavFromDetail;
+window.increaseDetailQty = increaseDetailQty;
+window.decreaseDetailQty = decreaseDetailQty;
+window.viewReviewsFromDetail = viewReviewsFromDetail;
