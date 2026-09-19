@@ -37,6 +37,8 @@ type Product
     category:String
     imageUrl:String
     createdAt:String
+    averageRating:Float
+    totalReviews:Int
 
 
 }
@@ -63,6 +65,16 @@ type MessagePayload
 {
     message:String!
     success: Boolean!
+}
+
+type Review
+{
+    id:ID!
+    user:User!
+    product:Product!
+    rating:Int!
+    comment:String
+    createdAt:String!
 }
 
 enum OrderStatus
@@ -129,6 +141,12 @@ input ResetPasswordInput
     newPassword:String!
 }
 
+input ReviewInput
+{
+    productId:ID!
+    rating:Int!
+    comment:String
+}
 
 
 type Query
@@ -145,6 +163,7 @@ type Query
         minPrice: Float,
         maxPrice: Float,
         search: String
+
     ): ProductPage!
 
     getProduct(id:ID):Product!
@@ -153,6 +172,11 @@ type Query
     allOrders:[Order]
     getOrder(id:ID!):Order!
     myOrders:[Order!]!  # get from token
+
+    # review
+    getProductReviews(productId:ID!): [Review!]!
+    getProductAverageRating(productId:ID!):Float
+    getProductReviewCount(productId:ID!): Int
 }
 
 type Mutation
@@ -183,5 +207,8 @@ type Mutation
     resetPassword(resetPasswordInput:ResetPasswordInput!):MessagePayload!
 
 
+    # Review
+    addReview(reviewInput:ReviewInput):Review
+    deleteReview(id:ID!):String
 
 }
