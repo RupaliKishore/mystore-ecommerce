@@ -58,6 +58,9 @@ A modern e-commerce platform built with Spring Boot 4.1.1, GraphQL, and vanilla 
 
 ### Installation
 
+- ⭐ **Product Reviews & Ratings** — Write reviews with 5-star rating
+- 🎨 **Product Detail View** — Flipkart-style detail modal
+
 1. **Clone repo:**
 ```bash
 git clone https://github.com/RupaliKishore/mystore-ecommerce.git
