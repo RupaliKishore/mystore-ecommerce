@@ -33,10 +33,11 @@ public class Product
 
     private  String description;
 
-    @PositiveOrZero(message = "Price must be greater than zero")
+    @PositiveOrZero(message = "Price must be greater than 0")
     private BigDecimal price;
 
 //    @Positive(message = "stock can not be negative")
+    @PositiveOrZero(message = "Stock cannot be negative")
     private Integer stockQuantity;
     private String category;
 

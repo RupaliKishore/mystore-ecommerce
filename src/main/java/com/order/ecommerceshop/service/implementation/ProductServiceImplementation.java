@@ -56,7 +56,7 @@ public class ProductServiceImplementation implements ProductService
             if(minPrice != null) predicates.add(cb.greaterThanOrEqualTo(root.get("price"), minPrice));
 
             // max price filter
-            if(maxPrice != null) predicates.add((Predicate) cb.lessThanOrEqualTo(root.get("price"), maxPrice));
+            if(maxPrice != null) predicates.add(cb.lessThanOrEqualTo(root.get("price"), maxPrice));
 
             // search String
             if(StringUtils.hasText(search))

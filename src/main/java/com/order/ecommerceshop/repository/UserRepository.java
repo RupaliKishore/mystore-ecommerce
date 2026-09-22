@@ -15,4 +15,7 @@ public interface UserRepository extends JpaRepository<User, Long>
 
     Optional<User> findByResetToken(String resetToken);
 
+//    @Query("SELECT u FROM User u WHERE u.resetToken = :token AND u.resetTokenExpiry > :now")
+//    Optional<User> findByValidResetToken(@Param("token") String token, @Param("now") LocalDateTime now);
+
 }
