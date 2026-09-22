@@ -79,6 +79,7 @@ type Review
 
 enum OrderStatus
 {
+    CONFIRMED
     PENDING
     SHIPPED
     PROCESSING

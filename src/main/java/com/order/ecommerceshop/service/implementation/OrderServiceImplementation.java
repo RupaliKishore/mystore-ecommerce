@@ -107,6 +107,8 @@ public class OrderServiceImplementation implements OrderService
         // set totalAmount
         order.setTotalAmount(totalAmount);
         Order saveOrder = orderRepository.save(order);
+        saveOrder.setStatus(OrderStatus.CONFIRMED);
+        saveOrder = orderRepository.save(saveOrder);
 
         // send order confirmation
         emailService.sendOrderConfirmationEmail(saveOrder);

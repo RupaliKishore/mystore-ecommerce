@@ -61,7 +61,7 @@ public class ProductController
     @PreAuthorize("hasRole('ADMIN')")
     public Product updateProduct(@Argument @Valid ProductInput productInput, @Argument Long id)
     {
-        Product product = this.productService.getProductById(id);
+//        Product product = this.productService.getProductById(id);
         return productService.updateProduct(id, productInput);
     }
 

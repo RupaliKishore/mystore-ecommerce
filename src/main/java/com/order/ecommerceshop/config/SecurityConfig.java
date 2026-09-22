@@ -104,7 +104,9 @@ public class SecurityConfig
                 "http://localhost:5500",   // VSCode Live Server
                 "http://127.0.0.1:8080",
                 "http://127.0.0.1:8081",
-                "http://127.0.0.1:5500"
+                "http://127.0.0.1:5500",
+                "http://localhost:8085",
+                "http://127.0.0.1:8085"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
