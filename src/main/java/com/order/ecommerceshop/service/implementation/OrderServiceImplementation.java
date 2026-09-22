@@ -66,6 +66,9 @@ public class OrderServiceImplementation implements OrderService
                 .totalAmount(BigDecimal.ZERO)
                 .user(user)
                 .orderItems(new ArrayList<>())
+                .deliveryAddress(orderInput.getDeliveryAddress())
+                .phoneNumber(orderInput.getPhoneNumber())
+                .paymentMethod(orderInput.getPaymentMethod())
                 .build();
 
         BigDecimal totalAmount = BigDecimal.ZERO;

@@ -17,6 +17,9 @@ type Order
     orderDate:String!
     user:User!
     orderItems:[OrderItem!]!
+    deliveryAddress:String
+    phoneNumber:String
+    paymentMethod:String
 }
 
 type OrderItem
@@ -113,6 +116,9 @@ input OrderInput
 {
 #    userId:ID!
     orderItems:[OrderItemInput!]!
+    deliveryAddress:String
+    phoneNumber:String
+    paymentMethod:String
 }
 
 input OrderItemInput

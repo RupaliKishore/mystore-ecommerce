@@ -42,4 +42,9 @@ public class Order
     @Builder.Default
     private List<OrderItem> orderItems = new ArrayList<>();
 
+
+    private String deliveryAddress;
+    private String phoneNumber;
+    private String paymentMethod;
+
 }

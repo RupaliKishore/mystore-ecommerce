@@ -69,6 +69,61 @@
   </div>
 </div>
 
+
+<!-- Checkout Modal -->
+<div id="checkoutModal" class="modal hidden">
+  <div class="modal-content" style="max-width: 600px;">
+    <div class="modal-header">
+      <h2>🛒 Checkout</h2>
+      <button class="close-btn" onclick="closeCheckout()">✖</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- Delivery Address Section -->
+      <h3 style="margin-top: 0;">📍 Delivery Address</h3>
+      <input type="text" id="checkoutName" placeholder="Full Name" class="auth-input" />
+      <input type="text" id="checkoutPhone" placeholder="Phone Number" class="auth-input" />
+      <textarea id="checkoutAddress" placeholder="Full Address" class="auth-input" rows="3"></textarea>
+      <input type="text" id="checkoutPincode" placeholder="Pincode" class="auth-input" />
+
+      <!-- Order Summary Section -->
+      <h3 style="margin-top: 20px;">📦 Order Summary</h3>
+      <div id="checkoutOrderSummary" style="background: #f8f9fa; padding: 15px; border-radius: 8px; max-height: 200px; overflow-y: auto;"></div>
+
+      <!-- Total -->
+      <div style="text-align: right; margin-top: 15px; font-size: 18px;">
+        <strong>Total: ₹<span id="checkoutTotal">0</span></strong>
+      </div>
+
+      <!-- Payment Method Section -->
+      <h3 style="margin-top: 20px;">💳 Payment Method</h3>
+      <div style="display: flex; flex-direction: column; gap: 10px;">
+        <label style="display: flex; align-items: center; gap: 10px; padding: 12px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer;">
+          <input type="radio" name="paymentMethod" value="COD" checked />
+          <span>💰 Cash on Delivery (COD)</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 10px; padding: 12px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer;">
+          <input type="radio" name="paymentMethod" value="UPI" />
+          <span>📱 UPI</span>
+        </label>
+        <label style="display: flex; align-items: center; gap: 10px; padding: 12px; border: 2px solid #ddd; border-radius: 8px; cursor: pointer;">
+          <input type="radio" name="paymentMethod" value="CARD" />
+          <span>💳 Credit / Debit Card</span>
+        </label>
+      </div>
+
+    </div>
+    <div class="modal-footer" style="display: flex; gap: 10px;">
+      <button onclick="closeCheckout()" style="padding: 10px 20px; background: #999; color: #fff; border: none; border-radius: 6px; cursor: pointer;">
+        Cancel
+      </button>
+      <button onclick="placeOrder()" class="checkout-btn" style="flex: 1;" id="placeOrderBtn">
+        ✅ Place Order
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Favorites Modal -->
 <div id="favModal" class="modal hidden">
   <div class="modal-content">

@@ -16,4 +16,8 @@ public class OrderInput
     @NotEmpty(message = "Order must contain at least one item")
     @Valid
     private List<OrderItemInput> orderItems;
+
+    private String deliveryAddress;
+    private String phoneNumber;
+    private String paymentMethod; // COD, UPI, CARD
 }
