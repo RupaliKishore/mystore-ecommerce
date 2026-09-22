@@ -5,6 +5,7 @@ import com.order.ecommerceshop.dto.response.ProductPage;
 import com.order.ecommerceshop.model.Product;
 import com.order.ecommerceshop.service.ProductService;
 import com.order.ecommerceshop.service.ReviewService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.BatchMapping;
@@ -51,23 +52,22 @@ public class ProductController
 
     @MutationMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public Product addProduct(@Argument ProductInput productInput)
+    public Product addProduct(@Argument @Valid ProductInput productInput)
     {
         return this.productService.addProduct(productInput);
     }
 
     @MutationMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public Product updateProduct(@Argument ProductInput productInput, @Argument Long id)
+    public Product updateProduct(@Argument @Valid ProductInput productInput, @Argument Long id)
     {
         Product product = this.productService.getProductById(id);
-        product.setName(productInput.getName());
         return productService.updateProduct(id, productInput);
     }
 
     @MutationMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public  Product updateStock(@Argument Long id, @Argument Integer stockQuantity)
+    public  Product updateStock(@Argument Long id, @Argument @Valid Integer stockQuantity)
     {
         return this.productService.updateStock(id, stockQuantity);
     }

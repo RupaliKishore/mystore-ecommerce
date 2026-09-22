@@ -64,6 +64,9 @@ public class AuthService
 
         userRepository.save(user);
 
+        // send welcome email
+        emailService.sendWelcomeEmail(user);
+
         String token = jwtService.generateToken(user.getEmail(), user.getRole().name());
         return new AuthPayload(token, user.getId(), user.getName(), user.getEmail(), user.getRole());
     }

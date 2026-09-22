@@ -8,6 +8,7 @@ import com.order.ecommerceshop.model.*;
 import com.order.ecommerceshop.repository.OrderRepository;
 import com.order.ecommerceshop.repository.ProductRepository;
 import com.order.ecommerceshop.repository.UserRepository;
+import com.order.ecommerceshop.service.EmailService;
 import com.order.ecommerceshop.service.OrderService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -26,6 +27,8 @@ public class OrderServiceImplementation implements OrderService
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final EmailService emailService;
+
 //    private String generateOrderNumber;
 
     @Override
@@ -103,9 +106,13 @@ public class OrderServiceImplementation implements OrderService
         }
         // set totalAmount
         order.setTotalAmount(totalAmount);
+        Order saveOrder = orderRepository.save(order);
+
+        // send order confirmation
+        emailService.sendOrderConfirmationEmail(saveOrder);
 
         // save
-       return  orderRepository.save(order);
+       return  saveOrder;
     }
 
     private String generateOrderNumber()
@@ -126,7 +133,11 @@ public class OrderServiceImplementation implements OrderService
         if(order.getStatus() == orderStatus.DELIVERED || order.getStatus() == orderStatus.CANCELLED) throw  new IllegalStateException("Cannot update status of a "+ order.getStatus() + " order");
 
         order.setStatus(orderStatus);
-        return orderRepository.save(order);
+        Order updateOrder = orderRepository.save(order);
+
+        // send status update email
+        emailService.sendOrderStatusUpdateEmail(updateOrder);
+        return updateOrder;
     }
 
 
@@ -149,7 +160,11 @@ public class OrderServiceImplementation implements OrderService
         }
 
         order.setStatus(OrderStatus.CANCELLED);
-        return orderRepository.save(order);
+        Order cancelOrder = orderRepository.save(order);
+
+        // send cancel email
+        emailService.sendOrderCancellationEmail(cancelOrder);
+        return cancelOrder;
     }
 
 

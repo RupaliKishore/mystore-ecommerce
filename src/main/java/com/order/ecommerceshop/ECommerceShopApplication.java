@@ -11,11 +11,13 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @SpringBootApplication
 @Slf4j
 @RequiredArgsConstructor
+@EnableAsync
 public class ECommerceShopApplication {
 
     public static void main(String[] args) {
@@ -26,7 +28,7 @@ public class ECommerceShopApplication {
     @Bean
     CommandLineRunner initBootstrapAdmin(UserRepository userRepository,
                                          PasswordEncoder passwordEncoder,
-                                        @Value("${app.bootatrap.admin.enabled:true}") boolean enabled,
+                                        @Value("${app.bootstrap.admin.enabled:true}") boolean enabled,
                                         @Value("${app.bootstrap.admin.email:}") String adminEmail,
                                          @Value("${app.bootstrap.admin.password:}") String adminPassword,
                                          @Value("${app.bootstrap.admin.name:Admin}") String adminName,
@@ -56,7 +58,7 @@ public class ECommerceShopApplication {
                   User admin = User.builder()
                           .name(adminName)
                           .email(adminEmail)
-                          .password(adminPassword)
+                          .password(passwordEncoder.encode(adminPassword))
                           .address(adminAddress)
                           .role(UserRole.ADMIN)
                           .build();

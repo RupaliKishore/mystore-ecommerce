@@ -6,6 +6,7 @@ import com.order.ecommerceshop.dto.request.UserRegisterInput;
 import com.order.ecommerceshop.dto.response.AuthPayload;
 import com.order.ecommerceshop.dto.response.MessagePayload;
 import com.order.ecommerceshop.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.graphql.data.method.annotation.Argument;
 import org.springframework.graphql.data.method.annotation.MutationMapping;
@@ -25,13 +26,13 @@ public class AuthController
     }
 
     @MutationMapping
-    public AuthPayload register(@Argument UserRegisterInput userRegisterInput )
+    public AuthPayload register(@Argument @Valid  UserRegisterInput userRegisterInput )
     {
         return authService.register(userRegisterInput);
     }
 
     @MutationMapping
-    public MessagePayload forgotPassword(@Argument ForgotPasswordInput forgotPasswordInput)
+    public MessagePayload forgotPassword(@Argument @Valid ForgotPasswordInput forgotPasswordInput)
     {
         return authService.forgotPassword(forgotPasswordInput);
     }
