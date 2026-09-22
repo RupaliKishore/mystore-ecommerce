@@ -1037,7 +1037,6 @@ function renderCheckoutSummary() {
 
   totalEl.textContent = total.toFixed(2);
 }
-
 async function placeOrder() {
   const name = document.getElementById('checkoutName').value.trim();
   const phone = document.getElementById('checkoutPhone').value.trim();
@@ -1051,17 +1050,14 @@ async function placeOrder() {
     showToast('Please fill all address fields', true);
     return;
   }
-
   if (!/^\d{10}$/.test(phone)) {
     showToast('Phone number must be 10 digits', true);
     return;
   }
-
   if (!/^\d{6}$/.test(pincode)) {
     showToast('Pincode must be 6 digits', true);
     return;
   }
-
   if (cart.length === 0) {
     showToast('Cart is empty', true);
     return;
@@ -1099,6 +1095,7 @@ async function placeOrder() {
       }
     });
 
+    // ✅ Success toast
     showToast('🎉 Order placed! ' + data.addOrder.orderNumber);
 
     // Cart clear
@@ -1106,13 +1103,11 @@ async function placeOrder() {
     saveCart();
     closeCheckout();
 
+    // ✅ Success modal ughad (alert peksha)
+    showOrderSuccess(data.addOrder, paymentMethod);
+
     // Reload products
     loadProducts(document.getElementById('searchBox').value.trim());
-
-    // Success message
-    setTimeout(() => {
-      alert(`✅ Order Confirmed!\n\nOrder Number: ${data.addOrder.orderNumber}\nTotal: ₹${data.addOrder.totalAmount}\nPayment: ${paymentMethod}\n\n📧 A confirmation email has been sent to your inbox.`);
-    }, 300);
 
   } catch (err) {
     showToast('❌ ' + err.message, true);
@@ -1121,6 +1116,24 @@ async function placeOrder() {
       btn.textContent = '✅ Place Order';
     }
   }
+}
+
+// ✅ NAVA — Success modal ughad
+function showOrderSuccess(order, paymentMethod) {
+  document.getElementById('successOrderNumber').textContent = '#' + order.orderNumber;
+  document.getElementById('successOrderTotal').textContent = '₹' + order.totalAmount;
+  document.getElementById('successPaymentMethod').textContent =
+    paymentMethod === 'COD' ? '💰 Cash on Delivery' :
+      paymentMethod === 'UPI' ? '📱 UPI' :
+        '💳 Credit/Debit Card';
+  document.getElementById('successOrderStatus').textContent = order.status;
+
+  show('orderSuccessModal');
+}
+
+// ✅ NAVA — Success modal band kar
+function closeOrderSuccess() {
+  hide('orderSuccessModal');
 }
 
 // ============================================================
@@ -1926,7 +1939,7 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') {
     ['cartModal', 'favModal', 'loginModal', 'ordersModal', 'adminModal',
       'resetModal', 'forgotModal', 'editProductModal', 'reviewsModal',
-      'productDetailModal', 'checkoutModal'].forEach(hide);
+      'productDetailModal', 'checkoutModal', 'orderSuccessModal'].forEach(hide);
   }
 });
 
@@ -1977,6 +1990,9 @@ window.checkout = checkout;
 // ✅ NAVA — Checkout
 window.closeCheckout = closeCheckout;
 window.placeOrder = placeOrder;
+// Order Success
+window.showOrderSuccess = showOrderSuccess;
+window.closeOrderSuccess = closeOrderSuccess;
 
 // Favorites
 window.toggleFavorite = toggleFavorite;
