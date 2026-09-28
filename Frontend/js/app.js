@@ -1,10 +1,10 @@
-//============================================================
+///============================================================
 // MyStore Frontend - Complete App.js
 // ============================================================
 
 const GRAPHQL_URL = window.location.hostname === 'localhost'
   ? 'http://localhost:8085/graphql'
-  : 'https://YOUR-BACKEND-URL.railway.app/graphql';  // ← Badala jar deploy kela asel tar
+  : 'https://mystore-ecommerce-rbng.onrender.com/graphql';
 
 // ============================================================
 // STATE

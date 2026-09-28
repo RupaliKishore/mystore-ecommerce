@@ -99,6 +99,7 @@ public class SecurityConfig
     {
         CorsConfiguration config = new CorsConfiguration();
         config.setAllowedOrigins(List.of(
+                "https://mystore-ecommerce-delta.vercel.app",
                 "http://localhost:8080",
                 "http://localhost:8081",
                 "http://localhost:5500",   // VSCode Live Server
