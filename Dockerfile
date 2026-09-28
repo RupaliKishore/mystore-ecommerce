@@ -6,6 +6,7 @@ WORKDIR /app
 COPY mvnw .
 COPY .mvn .mvn
 COPY pom.xml .
+RUN chmod +x ./mvnw
 
 # Dependencies download kar (cache sathi)
 RUN ./mvnw dependency:go-offline -B
