@@ -29,3 +29,14 @@ EXPOSE 8085
 
 # App run kar
 ENTRYPOINT ["java", "-jar", "app.jar"]
+
+
+# ============ Stage 2: Run ============
+FROM eclipse-temurin:25-jre-alpine
+WORKDIR /app
+
+COPY --from=build /app/target/*.jar app.jar
+COPY src/main/resources/truststore.jks /app/truststore.jks
+
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]
