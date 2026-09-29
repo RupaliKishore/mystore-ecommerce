@@ -1745,6 +1745,7 @@ function checkResetTokenInUrl() {
 
   if (token) {
     forgotToken = token;
+    sessionStorage.setItem('resetToken', token);   // ✅ Token save
     const modal = document.getElementById('resetModal');
     if (modal) modal.classList.remove('hidden');
     window.history.replaceState({}, document.title, window.location.pathname);
@@ -1754,7 +1755,8 @@ function checkResetTokenInUrl() {
 async function submitReset() {
   const newPass = document.getElementById('resetNewPassword').value.trim();
   const confirmPass = document.getElementById('resetConfirmPassword').value.trim();
-  const token = forgotToken;
+
+  const token = forgotToken || sessionStorage.getItem('resetToken');
 
   if (!newPass || newPass.length < 8) {
     showToast('Password must be at least 8 characters', true); return;
@@ -1772,6 +1774,7 @@ async function submitReset() {
     showToast('✅ ' + data.resetPassword.message);
     hide('resetModal');
     forgotToken = null;
+    sessionStorage.removeItem('resetToken');   // ✅ Clean up
     openLogin();
   } catch (err) {
     showToast('❌ ' + err.message, true);
