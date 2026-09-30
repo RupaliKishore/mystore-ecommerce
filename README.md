@@ -76,7 +76,7 @@ A modern e-commerce platform built with Spring Boot 4.1.1, GraphQL, and vanilla 
 
 ### Backend
 \`\`\`bash
-git clone https://github.com/rupalikishore/ecommerceshop
+git clone https://github.com/rupalikishore/mystore-ecommerce
 cd ecommerceshop
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=local
 \`\`\`
@@ -117,7 +117,7 @@ MIT
 
 ## 👤 Author
 **Rupali Kishore**
-- LinkedIn: [your-linkedin]
+- LinkedIn: [@rupalikishore](https://www.linkedin.com/in/rupalitompe/)
 - GitHub: [@rupalikishore](https://github.com/rupalikishore)
 - Email: rupalikishore3011@gmail.com
 
