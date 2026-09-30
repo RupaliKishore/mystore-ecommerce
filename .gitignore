@@ -38,11 +38,21 @@ replay_pid*.log
 *.hprof
 
 ### ⚠️ SENSITIVE — NEVER COMMIT ###
+#.env
+#.env.local
+#.env.*.local
+#
+#application-secret.properties
+
+### ⚠️ SENSITIVE — NEVER COMMIT ###
 .env
 .env.local
 .env.*.local
 application-local.properties
-application-secret.properties
+application-docker.properties
+truststore.jks
+*.jks
+*.p12
 
 ### Frontend ###
 Frontend/node_modules/

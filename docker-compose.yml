@@ -1,20 +1,20 @@
 version: '3.8'
 
 services:
-  # ============ MySQL Database ============
+  # ============ MySQL Database (Local) ============
   mysql:
     image: mysql:8.0
     container_name: mystore-mysql
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
-      MYSQL_DATABASE: ${DB_NAME:-myshop}
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: myshop
     ports:
       - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${DB_PASSWORD:-root}"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
       interval: 10s
       timeout: 5s
       retries: 10
@@ -30,35 +30,33 @@ services:
       - "8085:8085"
     environment:
       # Profile
-      SPRING_PROFILES_ACTIVE: docker
+      SPRING_PROFILES_ACTIVE: local
 
-      # Database
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${DB_NAME:-myshop}
-      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME:-root}
-      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD:-root}
+      # Database (Docker MySQL)
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/myshop
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: root
 
-      # JWT (env var madhun)
-      JWT_SECRET: ${JWT_SECRET}
+      # JWT
+      JWT_SECRET: LocalDevSecretKeyAtLeast64CharactersLongRandomStringHereForTesting!!@2024
 
       # Email (Brevo)
-      BREVO_SMTP_USERNAME: ${BREVO_SMTP_USERNAME}
-      BREVO_SMTP_KEY: ${BREVO_SMTP_KEY}
-      MAIL_FROM: ${MAIL_FROM}
+      BREVO_SMTP_USERNAME: ${BREVO_SMTP_USERNAME:-}
+      BREVO_SMTP_KEY: ${BREVO_SMTP_KEY:-}
+      MAIL_FROM: ${MAIL_FROM:-rupalikishore3011@gmail.com}
 
       # Frontend URL
       APP_FRONTEND_URL: ${FRONTEND_URL:-http://localhost:8081}
 
-      # Bootstrap admin (env var madhun)
-      APP_BOOTSTRAP_ADMIN_ENABLED: ${BOOTSTRAP_ADMIN_ENABLED:-true}
-      APP_BOOTSTRAP_ADMIN_EMAIL: ${ADMIN_EMAIL}
-      APP_BOOTSTRAP_ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      # Bootstrap admin
+      APP_BOOTSTRAP_ADMIN_ENABLED: "true"
+      APP_BOOTSTRAP_ADMIN_EMAIL: rupalikishore3011@gmail.com
+      APP_BOOTSTRAP_ADMIN_PASSWORD: ChangeMe@1234
     depends_on:
       mysql:
         condition: service_healthy
     networks:
       - mystore-network
-    volumes:
-      - ./logs:/app/logs
 
 volumes:
   mysql_data:

@@ -2,10 +2,7 @@
 // MyStore Frontend - Complete App.js
 // ============================================================
 
-const GRAPHQL_URL = window.location.hostname === 'localhost'
-  ? 'http://localhost:8085/graphql'
-  : 'https://mystore-ecommerce-rbng.onrender.com/graphql';
-
+const GRAPHQL_URL = 'http://localhost:8085/graphql';
 // ============================================================
 // STATE
 // ============================================================
